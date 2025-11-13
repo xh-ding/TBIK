@@ -22,6 +22,8 @@ from vllm.distributed import (divide, get_tensor_model_parallel_rank,
                               tensor_model_parallel_all_gather,
                               tensor_model_parallel_all_reduce)
 
+from src.patch.patch_batch_invariant import enable_batch_invariant_backward_mode
+
 if current_platform.is_cuda_alike():
     from vllm import _custom_ops as ops
 elif current_platform.is_xpu():
@@ -609,3 +611,11 @@ def patch_unified_triton_attn():
 
     triton_unified_attention.unified_attention = __unified_attention__
     print('patch vLLM unified attention to only use decode fn')
+
+def patch_training_inference_align():
+    enable_batch_invariant_backward_mode()
+    patch_kernel_unified_attention_2d()
+    patch_unified_triton_attn()
+    patch_triton_attn()
+    patch_vllm_rotary_embedding()
+    print("Successfully patched vLLM to align with TorchTitan\n")
