@@ -22,7 +22,7 @@ def patch_batch_invariant():
     os.environ["VLLM_USE_V1"] = "1"
     patch_rms_norm()
     # TODO: patch triton attention
-    os.environ["VLLM_ATTENTION_BACKEND"] = "TRITON"
+    os.environ["VLLM_ATTENTION_BACKEND"] = "TRITON_ATTN"
     # patch_triton_attention()
     print("Successfully patched vLLM to use custom batch_invariant implementation")
 
