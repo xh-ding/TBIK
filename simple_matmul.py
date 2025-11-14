@@ -5,7 +5,7 @@ from src.tbik.tree_based_matmul import matmul_tp_persistent
 # dimension of Qwen3-1.7B down_proj
 M, K, N = 1024, 6144, 2048
 
-tp_invariant_mode = int(os.environ.get('TP_INVARIANT_MODE', '0'))
+tp_invariant_mode = int(os.environ.get('TP_INVARIANT_MATMUL', '0'))
 
 data_type = torch.bfloat16
 A = torch.randn((M, K), device="cuda", dtype=data_type)
