@@ -6,9 +6,6 @@ Implementation of [Appeasing Machine Spirits: Deterministic LLM Inference across
 
 The fundamental source of nondeterminism in LLM serving systems is the non-associativity of floating-point arithmetic combined with variations in kernel execution order. Recent work from Thinking Machines Lab introduced batch-invariant operators, which ensure deterministic outputs across different batch sizes. However, tensor parallelism introduces another source of nondeterminism: matrix multiplication often uses a split-K parallel strategy, causing model outputs to vary with different TP sizes.
 
-We propose TBIK, a TP-invariant matmul method that achieves determinism by strictly controlling the reduction order in matrix multiplications. By replacing TP-size-sensitive(Row-Split) layers such as o_proj and down_proj with our TP-invariant counterparts, and by employing a tree-structured cross-GPU all-reduce, we achieve fully deterministic LLM inference across different TP sizes.
-
-Furthermore, we align the training engine (TP=1) with the inference engine (TP>1), enabling bitwise-identical true on-policy reinforcement learning.
 <p align="center">
   <img src="img/kernel.png" width="400"/>
 </p>
@@ -17,6 +14,9 @@ Furthermore, we align the training engine (TP=1) with the inference engine (TP>1
   <i>Illustration of TP-invariant matrix multiplication under the split-K parallel strategy.</i>
 </p>
 
+We propose TBIK, a TP-invariant matmul method that achieves determinism by strictly controlling the reduction order in matrix multiplications. By replacing TP-size-sensitive(Row-Split) layers such as o_proj and down_proj with our TP-invariant counterparts, and by employing a tree-structured cross-GPU all-reduce, we achieve fully deterministic LLM inference across different TP sizes.
+
+Furthermore, we align the training engine (TP=1) with the inference engine (TP>1), enabling bitwise-identical true on-policy reinforcement learning.
 
 <p align="center">
   <img src="img/overview.png" width="700"/>
@@ -34,12 +34,12 @@ conda create -n tbik python=3.12 -y
 conda activate tbik
 pip install vllm==0.11.0
 ```
-2. Install dependencies
+<!-- 2. Install dependencies
 ```bash
 pip install datasets latex2sympy2 word2number immutabledict nltk langdetect
-```
+``` -->
 
-3. Install Torchtitan and Flash Attention(This is optional unless you want to try `simple_rl.py`)
+2. Install Torchtitan and Flash Attention(This is optional unless you want to try `simple_rl.py`)
 ```bash
 # Flash Attention
 pip install flash-attn --no-build-isolation
@@ -50,7 +50,7 @@ pip install -e .
 cd ..
 ```
 
-4. Download TBIK repository
+3. Download TBIK repository
 ```bash
 git clone git@github.com:xh-ding/TBIK.git
 cd TBIK
@@ -72,10 +72,15 @@ VLLM_BATCH_INVARIANT=1 VLLM_TP_INVARIANT=1 python simple_inference.py
 ```
 
 ### Bitwise consistent on-policy RL
-Following spirl(https://github.com/bwasti/spirl), we use vLLM for inference and TorchTitan for training in our demo code to make the workflow easier to try for users. In practical RL training pipelines, the training engine typically runs with FSDP (TP = 1), while the inference engine runs with TP > 1. This mismatch in numerical precision across the two engines is the fundamental cause of training instability in RL. By introducing TBIK and aligning the operators used in both the training and inference engines, we address this issue at its root, making true on-policy RL feasible.
+Following [spirl](https://github.com/bwasti/spirl), we use vLLM for inference and TorchTitan for training in our demo code to make the workflow easier to try for users. In practical RL training pipelines, the training engine typically runs with FSDP (TP = 1), while the inference engine runs with TP > 1. This mismatch in numerical precision across the two engines is the fundamental cause of training instability in RL. By introducing TBIK and aligning the operators used in both the training and inference engines, we address this issue at its root, making true on-policy RL feasible.
 ```bash
-VLLM_BATCH_INVARIANT=1 VLLM_TP_INVARIANT=1 ALIGN_TRAIN_INFERENCE=1 python simple_rl.py
+[CUDA_VISIBLE_DEVICES] VLLM_BATCH_INVARIANT=1 VLLM_TP_INVARIANT=1 ALIGN_TRAIN_INFERENCE=1 python simple_rl.py
 ```
+
+## Contributing
+The code was currently tested with Qwen3-1.7B, should work with other Qwen3 models with the same architecture.
+
+We welcome contributions from the research community to improve TBIK. If you have any idea or would like to report a bug, please open an issue or submit a pull request.
 
 
 ## Citation
